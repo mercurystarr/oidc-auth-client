@@ -21,8 +21,14 @@ export function OidcProvider({ children }: { children: ReactNode }) {
     // signinRedirectCallback() itself and navigated in its own .then() —
     // here that call happens inside the library, invisibly, as soon as
     // AuthProvider mounts and sees code/state in the URL.
-    onSigninCallback: () => {
-      navigate("/", { replace: true });
+    //
+    // `user.state` is whatever Home.tsx passed into signinRedirect({ state })
+    // — the page ProtectedRoute originally redirected from. Falls back to
+    // "/" for the plain "clicked Log in from Home" case, where there's no
+    // original destination to return to.
+    onSigninCallback: (user) => {
+      const returnTo = typeof user?.state === "string" ? user.state : "/";
+      navigate(returnTo, { replace: true });
     },
   };
 
