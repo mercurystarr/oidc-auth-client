@@ -1,39 +1,18 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { userManager } from "../auth/userManager";
+import { useAuth } from "react-oidc-context";
 
+// Compare to the hand-rolled version: there's no useEffect here at all.
+// AuthProvider (in OidcProvider.tsx) already ran signinRedirectCallback()
+// itself, the moment it mounted and saw code/state in the URL — before
+// this component even rendered. This component just reflects whatever
+// state that produced. On success, onSigninCallback (configured on
+// AuthProvider) already navigated away to "/", so this rarely stays on
+// screen long enough to see. On failure, it won't navigate, and auth.error
+// is what's left for us to show.
 function Callback() {
-  const navigate = useNavigate();
-  const [error, setError] = useState<string | null>(null);
+  const auth = useAuth();
 
-  // signinRedirectCallback() consumes the stored code_verifier/state —
-  // calling it twice throws "no matching state". StrictMode double-invokes
-  // effects in dev specifically to catch side effects like this, so guard
-  // with a ref (not state — we don't want the guard itself to re-render).
-  const hasRun = useRef(false);
-
-  useEffect(() => {
-    if (hasRun.current) return;
-    hasRun.current = true;
-
-    userManager
-      .signinRedirectCallback()
-      .then(() => {
-        // Step 3/4 (AuthContext + ProtectedRoute) will redirect back to
-        // whatever page originally triggered the login, via signinRedirect's
-        // `state` option. For now, everything funnels back to "/".
-        navigate("/", { replace: true });
-      })
-      .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : String(err));
-      });
-  }, [navigate]);
-
-  if (error) {
-    // Step 8 will build this out into a proper error UI (distinguishing
-    // e.g. user-cancelled vs PKCE mismatch). This is just a safety net for
-    // now so a failure doesn't hang on "Completing sign-in..." forever.
-    return <p>Sign-in failed: {error}</p>;
+  if (auth.error) {
+    return <p>Sign-in failed: {auth.error.message}</p>;
   }
 
   return <p>Completing sign-in…</p>;

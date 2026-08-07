@@ -1,14 +1,20 @@
-import { userManager } from "../auth/userManager";
+import { useAuth } from "react-oidc-context";
 
 function Home() {
-  const handleLogin = () => {
-    userManager.signinRedirect();
-  };
+  const auth = useAuth();
+
+  if (auth.isLoading) {
+    return <p>Loading…</p>;
+  }
 
   return (
     <div style={{ padding: 40 }}>
       <h1>oidc-auth-server demo client</h1>
-      <button onClick={handleLogin}>Log in</button>
+      {auth.isAuthenticated ? (
+        <p>Logged in as {auth.user?.profile.sub}</p>
+      ) : (
+        <button onClick={() => auth.signinRedirect()}>Log in</button>
+      )}
     </div>
   );
 }
