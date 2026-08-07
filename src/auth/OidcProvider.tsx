@@ -14,7 +14,18 @@ export function OidcProvider({ children }: { children: ReactNode }) {
     redirect_uri: "http://localhost:9700/callback",
     post_logout_redirect_uri: "http://localhost:9700",
     scope: "openid profile",
-    automaticSilentRenew: false, // library pass task #12 turns this on
+
+    // Checked oidc-client-ts's source rather than assume: signinSilent()
+    // (which this triggers internally on the accessTokenExpiring event,
+    // ~60s before expiry by default) checks `user.refresh_token` first and
+    // uses the refresh token grant directly if one exists — it only falls
+    // back to an iframe + `prompt=none` request when there's no refresh
+    // token. This server always issues one, so the iframe path (which the
+    // server has no support for) never gets hit. Rotation is also handled
+    // correctly: each renewal's response overwrites the stored user, so
+    // the next renewal picks up the newly-rotated refresh_token rather
+    // than reusing a stale one.
+    automaticSilentRenew: true,
 
     // Runs once, after AuthProvider's internal signinRedirectCallback()
     // succeeds. Compare to our hand-rolled Callback.tsx, which called
