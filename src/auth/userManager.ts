@@ -1,6 +1,6 @@
 import { UserManager, WebStorageStateStore } from "oidc-client-ts";
 
-// `authority` is the issuer — oidc-client-ts fetches
+// `authority` is the issuer, and oidc-client-ts fetches
 // http://localhost:9000/.well-known/openid-configuration on first use
 // and caches the discovery document (authorize/token endpoints, jwks_uri,
 // etc). This is why you don't hardcode /authorize or /token here at all;
@@ -15,7 +15,7 @@ export const userManager = new UserManager({
 
 
 
-  // No client_secret field exists in this config at all — this is what
+  // No client_secret field exists in this config at all: this is what
   // "public client" means in practice. There is nothing to leak because
   // there is nothing secret to configure.
 
