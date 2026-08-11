@@ -20,6 +20,20 @@ function Home() {
     auth.signinRedirect(from ? { state: from } : undefined);
   };
 
+  // signoutRedirect() isn't usable here: it requires the discovery doc's
+  // end_session_endpoint (oidc-client-ts throws "No end session endpoint"
+  // otherwise), and this server doesn't implement RP-Initiated Logout.
+  // removeUser() is the local-only equivalent — clears the stored user from
+  // sessionStorage and fires addUserUnloaded, no server round-trip. That's
+  // also correct for this server's session model: the Spring Security login
+  // session cookie is separate from the OIDC tokens and is left untouched,
+  // so a subsequent "Log in" click will silently reuse it rather than
+  // showing the login form again — same behavior already seen in earlier
+  // manual logins during this project.
+  const handleLogout = () => {
+    auth.removeUser();
+  };
+
   return (
     <div style={{ padding: 40 }}>
       <h1>oidc-auth-server demo client</h1>
@@ -27,6 +41,9 @@ function Home() {
         <>
           <p>Logged in as {auth.user?.profile.sub}</p>
           <Link to="/profile">View profile</Link>
+          <p>
+            <button onClick={handleLogout}>Log out</button>
+          </p>
         </>
       ) : (
         <button onClick={handleLogin}>Log in</button>
